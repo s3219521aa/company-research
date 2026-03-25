@@ -1,5 +1,5 @@
-from typing import Any, Optional
-from pydantic import BaseModel
+from typing import Any, Literal, Optional
+from pydantic import BaseModel, Field
 
 
 class SearchResult(BaseModel):
@@ -26,7 +26,7 @@ class ResearchResponse(BaseModel):
 
 
 class ModuleStatus(BaseModel):
-    status: str  # pending | scraping | done | error
+    status: Literal["pending", "scraping", "done", "error"]
     data: Optional[Any] = None
     error: Optional[str] = None
 
@@ -50,7 +50,7 @@ class BusinessData(BaseModel):
 
 
 class LegalItem(BaseModel):
-    type: str  # lawsuit | enforcement | dishonest
+    type: Literal["lawsuit", "enforcement", "dishonest"]
     title: str
     date: str = ""
     court: str = ""
@@ -61,7 +61,7 @@ class LegalData(BaseModel):
     lawsuit_count: int = 0
     enforcement_count: int = 0
     dishonest_count: int = 0
-    items: list[LegalItem] = []
+    items: list[LegalItem] = Field(default_factory=list)
 
 
 class ReviewItem(BaseModel):
@@ -73,7 +73,7 @@ class ReviewItem(BaseModel):
 
 class ReviewsData(BaseModel):
     source_count: int = 0
-    items: list[ReviewItem] = []
+    items: list[ReviewItem] = Field(default_factory=list)
 
 
 class SentimentItem(BaseModel):
@@ -86,4 +86,4 @@ class SentimentItem(BaseModel):
 
 class SentimentData(BaseModel):
     item_count: int = 0
-    items: list[SentimentItem] = []
+    items: list[SentimentItem] = Field(default_factory=list)
