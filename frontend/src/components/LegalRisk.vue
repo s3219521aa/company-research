@@ -13,8 +13,8 @@
           <div class="num">{{ data.dishonest_count }}</div><div class="desc">失信记录</div>
         </div>
       </div>
-      <div v-if="data.items.length === 0" class="empty">暂无法律风险记录</div>
-      <div v-for="item in data.items" :key="item.title" class="item">
+      <div v-if="!data.items || data.items.length === 0" class="empty">暂无法律风险记录</div>
+      <div v-for="item in (data.items || [])" :key="item.title" class="item">
         <span class="tag" :class="item.type">{{ typeLabel(item.type) }}</span>
         <span class="title">{{ item.title }}</span>
         <span class="meta">{{ item.date }} {{ item.court }}</span>

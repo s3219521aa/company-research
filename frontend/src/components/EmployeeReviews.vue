@@ -3,8 +3,8 @@
     <div v-if="!data" class="loading">数据加载中...</div>
     <template v-else>
       <div class="count">共 {{ data.source_count }} 条评价</div>
-      <div v-if="data.items.length === 0" class="empty">暂无员工评价数据</div>
-      <div v-for="(item, i) in data.items" :key="i" class="review">
+      <div v-if="!data.items || data.items.length === 0" class="empty">暂无员工评价数据</div>
+      <div v-for="(item, i) in (data.items || [])" :key="i" class="review">
         <div class="review-header">
           <span class="source">{{ item.source }}</span>
           <span class="stars" v-if="item.rating">{{ '★'.repeat(item.rating) }}{{ '☆'.repeat(5 - item.rating) }}</span>

@@ -85,33 +85,46 @@ function moduleData(key) {
 }
 
 async function startResearch() {
+  clearInterval(pollInterval)
+  pollInterval = null
   timedOut.value = false
   overallStatus.value = 'pending'
   modules.value = {}
   pollStart = Date.now()
 
-  const { task_id, cached } = await research(creditCode, companyName)
+  try {
+    const { task_id, cached } = await research(creditCode, companyName)
 
-  if (cached) {
-    const data = await getCompany(creditCode)
-    modules.value = data.modules
-    overallStatus.value = 'done'
-    return
-  }
-
-  pollInterval = setInterval(async () => {
-    if (Date.now() - pollStart > 120_000) {
-      clearInterval(pollInterval)
-      timedOut.value = true
+    if (cached) {
+      const data = await getCompany(creditCode)
+      modules.value = data.modules
+      overallStatus.value = 'done'
       return
     }
-    const status = await pollTask(task_id)
-    modules.value = status.modules
-    overallStatus.value = status.overall_status
-    if (status.overall_status === 'done') {
-      clearInterval(pollInterval)
-    }
-  }, 3000)
+
+    pollInterval = setInterval(async () => {
+      if (Date.now() - pollStart > 120_000) {
+        clearInterval(pollInterval)
+        pollInterval = null
+        timedOut.value = true
+        return
+      }
+      try {
+        const status = await pollTask(task_id)
+        modules.value = status.modules
+        overallStatus.value = status.overall_status
+        if (status.overall_status === 'done') {
+          clearInterval(pollInterval)
+          pollInterval = null
+        }
+      } catch {
+        // transient network error — keep polling
+      }
+    }, 3000)
+  } catch {
+    overallStatus.value = 'error'
+    timedOut.value = true
+  }
 }
 
 onMounted(startResearch)
