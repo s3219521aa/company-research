@@ -1,5 +1,4 @@
 import asyncio
-from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 from backend.scrapers.base import BaseScraper
 
@@ -19,17 +18,25 @@ class SentimentScraper(BaseScraper):
 
     async def _fetch_zhihu(self, company_name: str) -> list[dict]:
         query = f"{company_name} 工作 评价"
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page(user_agent=self.random_ua())
-            await page.goto(
-                f"https://www.zhihu.com/search?type=content&q={query}",
-                timeout=30000,
-            )
-            await page.wait_for_load_state("networkidle", timeout=15000)
-            content = await page.content()
-            await browser.close()
+        content = await asyncio.get_running_loop().run_in_executor(
+            None, self._sync_zhihu_html, query
+        )
         return self._parse_zhihu(content)
+
+    def _sync_zhihu_html(self, query: str) -> str:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page(user_agent=self.random_ua())
+                page.goto(
+                    f"https://www.zhihu.com/search?type=content&q={query}",
+                    timeout=30000,
+                )
+                page.wait_for_load_state("networkidle", timeout=15000)
+                return page.content()
+            finally:
+                browser.close()
 
     def _parse_zhihu(self, html: str) -> list[dict]:
         soup = BeautifulSoup(html, "html.parser")
